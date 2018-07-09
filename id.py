@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 
-# Created June 25, 2018
-# id3 modification script through Mutagen
+# Created 180625 - 180709
+# Commandline id3 modification script through Mutagen
+# Written for use with OSX High Sierra
 
-import sys, os, io
+import sys, os, textwrap
 from pathlib import Path
-import pandas as pd
 
 # Required custom python modules
 import muta as mu
@@ -13,11 +13,7 @@ import fsys as fs
 
 # Check argument for valid path -----------
 # Use current path if no path given as argument
-if len(sys.argv) == 2:
-  # Verify path
-  path = str(Path(sys.argv[1]))
-else:
-  path = fs.getpath()
+path = str(Path(sys.argv[1])) if len(sys.argv) == 2 else fs.getpath()
 
 # Start off with a clear screen
 os.system('cls||clear')
@@ -50,20 +46,18 @@ else:
   sys.exit()
 
 
-# Check path for music files
-files = fs.getfpath(path, ext)
-
 # Clear screen for audio file options
 os.system('cls||clear')
 print('--', ext, 'files in folder --')
 
-# Parse files for music editing
+# Get path and parse files for music editing
+files = fs.getfpath(path, ext)
 mu.listattr(files, 30, 'title')
 
 while True:
   # Print input options
   print('-' * 60,
-        '\nTITLE:  (1) View Title   (2) Edit Title      (0) Exit'
+        '\nTITLE:  (1) View Title   (2) Edit Title      (0/q) Exit'
         '\nALBUM:  (3) View Album   (4) Edit Album'
         '\nARTIST: (5) View Artist  (6) Edit Artist'
         '\nTRACK:  (7) View Track # (8) Edit Track #'
@@ -78,10 +72,13 @@ while True:
   sel = input('Enter Selection: ')
   if not fs.isint(sel):
     print('Not a valid entry')
-    sys.exit()
+    #sys.exit()
   else:
     sel = int(sel)
-  os.system('cls||clear')
+
+  # Clear screen if not script exit
+  if sel != 0 or sel != 'q' or sel != 'Q':
+    os.system('cls||clear')
 
   # Options
   if sel == 1:
@@ -113,25 +110,30 @@ while True:
   elif sel == 10:
     # Edit Genre
     mu.setbatch(files, 'genre')
-  elif sel == 11:
-    # View Custom Tag
-    print('Tags:', ', '.join(idtags[:7]), '\n', ' ' * 4, ', '.join(idtags[7:]))
-    custom = input('Query custom tag: ')
-    mu.listattr(files, 50, custom)
-  elif sel == 12:
-    # Edit Custom Tag
-    print('Tags:', ', '.join(idtags[:7]), '\n', ' ' * 4, ', '.join(idtags[7:]))
-    custom = input('Enter tag to edit: ')
-    tag = input('Enter tag content: ')
-    for f in (f for f in files if mu.settag(f, custom, tag)):
-      print('%s changed for: ' % custom, f.rsplit('/', 1)[1])
-  elif sel == 13:
-    # Delete Tag
-    print('Tags:', ', '.join(idtags[:7]), '\n', ' ' * 4, ', '.join(idtags[7:]))
-    tag = input('Enter tag name to delete: ')
-    for f in files:
-      if mu.deltag(f, tag):
-        print(tag, 'tag deleted from', f.rsplit('/', 1)[1])
+  elif sel == 11 or sel == 12 or sel == 13:
+    # Custom/User Select Tag Options
+    print('Available Tags:')
+    print(textwrap.fill(' '.join(mu.tagnames()), width=75))
+    print('\nCommon Tags:')
+    print(textwrap.fill(' '.join(idtags), width=75), '\n')
+    if sel == 11:
+      # View tag by user input
+      custom = input('Query tag: ')
+      if mu.condinput(custom):
+        mu.listattr(files, 50, custom)
+    elif sel == 12:
+      # Edit tag by user input
+      custom = input('Edit tag: ')
+      if mu.condinput(custom):
+        tag = input('\nEnter tag content: ')
+        [print('% s changed for: ' % custom, f.rsplit('/', 1)[1])
+               for f in files if mu.settag(f, custom, tag)]
+    elif sel == 13:
+      # Delete tag by user input
+      tag = input('Delete tag: ')
+      if mu.condinput(tag):
+        [print(tag, 'tag deleted from', f.rsplit('/', 1)[1])
+               for f in files if mu.deltag(f, tag)]
   elif sel == 14:
     # Delete Commnets
     mu.listattr(files, 30, 'title')
@@ -141,7 +143,7 @@ while True:
         print('Comments deleted from', f)
     else:
       print('No comment tags deleted.')
-  else:
+  elif sel == 0 or sel == 'q' or sel == 'Q':
     break
 
 sys.exit()

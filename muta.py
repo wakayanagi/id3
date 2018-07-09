@@ -4,8 +4,8 @@
 # Module utilizing Mutagen for ID3 tag manipulation
 
 import mutagen as mg
-from mutagen.easyid3 import EasyID3
-from mutagen.id3 import ID3
+from mutagen.easyid3 import EasyID3, EasyID3KeyError
+#from mutagen.id3 import ID3
 import fsys as fs
 
 def openfile(file, eflag):
@@ -32,6 +32,10 @@ def removecomments(file):
   fs.setmtime(file, ts)
   return True
 
+def tagnames():
+  # Return list of all valid EasyID3 tags
+  return sorted(list(EasyID3.valid_keys.keys()))
+
 def gettag(file, tag):
   # Open music file and query the target ID3 tag
   aud, ts = openfile(file, True)
@@ -41,11 +45,15 @@ def gettag(file, tag):
 def settag(file, tag, desc):
   # Open music file, modify/add the tag details, and save
   aud, ts = openfile(file, True)
-  aud[tag] = desc
-  # Save modified file and restore modify timestamp
-  aud.save()
-  fs.setmtime(file, ts)
-  return True
+  try:
+    aud[tag] = desc
+    # Save modified file and restore modify timestamp
+    aud.save()
+    fs.setmtime(file, ts)
+    return True
+  except EasyID3KeyError:
+    print('Invalid tag name', tag, 'for', file.rsplit('/', 1)[1])
+    return False
 
 def deltag(file, tag):
   # Open music file, delete target tag, and save
@@ -62,7 +70,13 @@ def listattr(files, padding, tag):
   for f in files:
     # Display file name and tag details
     fname = fs.usubstr(f.rsplit('/', 1)[1], padding)
-    print(fname + (padding - fs.ulen(fname)) * '.', '|', gettag(f, tag))
+    tname = gettag(f, tag)
+
+    # If tag attributes are too long, shorten to width of term screen
+    if tname != None:
+      tname = fs.usubstr(tname, fs.termwidth() - padding - 4)
+
+    print(fname + (padding - fs.ulen(fname)) * '.', '|', tname)
 
 def condinput(inpt):
   # Interpret input sring to check for scenario exceptions

@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
-# fsys.py -- 180629
+# fsys.py -- 180709
 # Module for interpreting files and directories
 # Python 3 and OSX
 
-import os, time, readline, unicodedata
+import os, time, unicodedata
 
 def getpath():
   # Confirm path where script is called
@@ -48,6 +48,10 @@ def setmtime(file, mtime):
   # Time in seconds since epoch
   os.utime(file, (mtime, mtime))
   return True
+
+def termwidth():
+  # Get current terminal screen character width
+  return os.get_terminal_size()[0]
 
 def charwidth(char):
   # Check if unicode character is full-width or half-width
@@ -93,13 +97,3 @@ def isint(str):
   except ValueError:
     return False
 
-
-
-def inputprefill(prompt, text):
-  def hook():
-    readline.insert_text(text)
-    readline.redisplay()
-  readline.set_pre_input_hook(hook)
-  result = input(prompt)
-  readline.set_pre_input_hook()
-  return result
