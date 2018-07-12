@@ -5,7 +5,6 @@
 
 import mutagen as mg
 from mutagen.easyid3 import EasyID3, EasyID3KeyError
-#from mutagen.id3 import ID3
 import fsys as fs
 
 def openfile(file, eflag):
@@ -25,7 +24,7 @@ def removecomments(file):
   aud, ts = openfile(file, False)
   # Iterate through the music file for comment tags and remove
   for tag in list(aud):
-    if tag.startswith('TXXX') or tag.startswith('COMM') or tag == 'comment':
+    if tag.startswith('TXXX') or tag.startswith('COMM') or ('cmt' in tag) or tag == 'comment':
       aud.pop(tag)
   # Save modified file and restore modify timestamp
   aud.save()
