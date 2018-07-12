@@ -1,0 +1,8 @@
+# Library dependencies for the python script.
+# Install with 'pip install -r requirements.txt'
+
+# Package makes use of Mutagen for ID3 tag intepretation/manipulation
+mutagen>=1.40.0
+
+# Requires unicodedata to interpret double-width Asian characters
+unicodedata
